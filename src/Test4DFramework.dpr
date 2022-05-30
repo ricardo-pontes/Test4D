@@ -15,37 +15,49 @@ begin
   TTest4D.Test('teste assert string quebrado',
   procedure
   begin
-    TTest4DCommands.Assert<string>('teste aseert string', 'TesteAssert');
+    Assert.AreEqual('teste aseert string', 'TesteAssert', 'Teste');
   end);
 
   TTest4D.Test('teste assert string OK',
   procedure
   begin
-    TTest4DCommands.Assert<string>('teste de assert string', 'teste de assert string');
+    Assert.AreEqual('teste de assert string', 'teste de assert string');
   end);
 
   TTest4D.Test('teste assert integer quebrado',
   procedure
   begin
-    TTest4DCommands.Assert<integer>(0, 1);
+    Assert.AreEqual(0, 1);
   end);
 
   TTest4D.Test('teste assert integer OK',
   procedure
   begin
-    TTest4DCommands.Assert<integer>(0, 0);
+    Assert.AreEqual(0, 0);
   end);
 
   TTest4D.Test('teste assert float quebrado',
   procedure
   begin
-    TTest4DCommands.Assert<Extended>(0.00, 0.0001);
+    Assert.AreEqual(0.00, 0.0001);
   end);
 
   TTest4D.Test('teste assert float OK',
   procedure
   begin
-    TTest4DCommands.Assert<Extended>(0.00, 0.00);
+    Assert.AreEqual(0.00, 0.00);
+  end);
+
+  TTest4D.Test('teste assert boolean quebrado',
+  procedure
+  begin
+    Assert.AreEqual(True, False);
+  end);
+
+  TTest4D.Test('teste assert boolean OK',
+  procedure
+  begin
+    Assert.AreEqual(True, True);
   end);
 
   TTest4D.Test('teste erro de código',
@@ -57,7 +69,7 @@ begin
   TTest4D.Test('teste willraise quebrado',
   procedure
   begin
-    TTest4DCommands.WillRaise(
+    Assert.WillRaise(
     procedure
     begin
 
@@ -67,7 +79,7 @@ begin
   TTest4D.Test('teste willraise ok',
   procedure
   begin
-    TTest4DCommands.WillRaise(
+    Assert.WillRaise(
     procedure
     begin
       raise Exception.Create('Error Message');
@@ -77,7 +89,7 @@ begin
   TTest4D.Test('teste willnotraise quebrado',
   procedure
   begin
-    TTest4DCommands.WillNotRaise(
+    Assert.WillNotRaise(
     procedure
     begin
       raise Exception.Create('Error Message');
@@ -87,7 +99,7 @@ begin
   TTest4D.Test('teste willnotraise ok',
   procedure
   begin
-    TTest4DCommands.WillNotRaise(
+    Assert.WillNotRaise(
     procedure
     begin
 
