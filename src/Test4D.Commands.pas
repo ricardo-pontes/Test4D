@@ -7,6 +7,8 @@ uses
   System.Rtti,
   System.Math,
   System.Classes,
+  System.TypInfo,
+  System.Variants,
   Test4D.Types;
 
 
@@ -41,6 +43,21 @@ type
 
     class procedure WillRaise(const aValue : TProc);
     class procedure WillNotRaise(const aValue : TProc);
+
+    class function Implements<T : IInterface>(aValue : IInterface; const aMessage : string = '' ) : T;
+
+    class procedure IsTrue(const aCondition : boolean; const aMessage : string = '');
+    class procedure IsFalse(const aCondition : boolean; const aMessage : string = '');
+
+    class procedure IsNull(const aCondition : TObject; const aMessage : string = '');overload;
+    class procedure IsNull(const aCondition : Pointer; const aMessage : string = '');overload;
+    class procedure IsNull(const aCondition : IInterface; const aMessage : string = '');overload;
+    class procedure IsNull(const aCondition : Variant; const aMessage : string = '');overload;
+
+    class procedure IsNotNull(const aCondition : TObject; const aMessage : string = '');overload;
+    class procedure IsNotNull(const aCondition : Pointer; const aMessage : string = '');overload;
+    class procedure IsNotNull(const aCondition : IInterface; const aMessage : string = '');overload;
+    class procedure IsNotNull(const aCondition : Variant; const aMessage : string = '');overload;
   end;
 
 implementation
@@ -184,6 +201,83 @@ class procedure Assert.AreNotEqualMemory(const aValue, aTobe: Pointer;
 begin
   if CompareMem(aValue, aTobe, size) then
     raise Test4DExceptionAssert.Create('Memory values are equal ' + aMessage);
+end;
+
+class function Assert.Implements<T>(aValue: IInterface;
+  const aMessage: string): T;
+begin
+  if not Supports(aValue, GetTypeData(TypeInfo(T)).Guid,result) then
+    raise Test4DExceptionAssert.Create('value does not implement ' + GetTypeName(TypeInfo(T)) + aMessage);
+end;
+
+class procedure Assert.IsFalse(const aCondition: boolean;
+  const aMessage: string);
+begin
+  if aCondition then
+    raise Test4DExceptionAssert.Create('Condition is True when False expected. ' + aMessage);
+end;
+
+class procedure Assert.IsNotNull(const aCondition: IInterface;
+  const aMessage: string);
+begin
+  if aCondition = nil then
+    raise Test4DExceptionAssert.Create('Interface is Nil when not nil expected. ' + aMessage);
+end;
+
+class procedure Assert.IsNotNull(const aCondition: Pointer;
+  const aMessage: string);
+begin
+  if aCondition = nil then
+    raise Test4DExceptionAssert.Create('Pointer is Nil when Not Nil expected. ' + aMessage);
+end;
+
+class procedure Assert.IsNotNull(const aCondition: TObject;
+  const aMessage: string);
+begin
+  if aCondition = nil then
+    raise Test4DExceptionAssert.Create('Object is Nil when Not Nil expected. ' + aMessage);
+end;
+
+class procedure Assert.IsNotNull(const aCondition: Variant;
+  const aMessage: string);
+begin
+  if VarIsNull(aCondition) then
+    raise Test4DExceptionAssert.Create('Variant is Null when not Null expected. ' + aMessage);
+end;
+
+class procedure Assert.IsNull(const aCondition: Variant;
+  const aMessage: string);
+begin
+  if not VarIsNull(aCondition) then
+    raise Test4DExceptionAssert.Create('Variant is Not Null when Null expected. ' + aMessage);
+end;
+
+class procedure Assert.IsNull(const aCondition: IInterface;
+  const aMessage: string);
+begin
+  if aCondition <> nil then
+    raise Test4DExceptionAssert.Create('Interface is not Nil when nil expected. ' + aMessage);
+end;
+
+class procedure Assert.IsNull(const aCondition: TObject;
+  const aMessage: string);
+begin
+  if aCondition <> nil then
+    raise Test4DExceptionAssert.Create('Object is not nil when nil expected. ' + aMessage);
+end;
+
+class procedure Assert.IsNull(const aCondition: Pointer;
+  const aMessage: string);
+begin
+  if aCondition <> nil then
+    raise Test4DExceptionAssert.Create('Pointer is not Nil when nil expected. ' + aMessage);
+end;
+
+class procedure Assert.IsTrue(const aCondition: boolean;
+  const aMessage: string);
+begin
+  if not aCondition then
+    raise Test4DExceptionAssert.Create('Condition is False when True expected. ' + aMessage);
 end;
 
 class procedure Assert.AreNotEqual(const aValue, aTobe: TClass;

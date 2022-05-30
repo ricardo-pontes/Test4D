@@ -46,7 +46,11 @@ type
     class function TestOnly(aName : string; aMethod : TProc) : TTest4DCore;
     class function Skip(aName : string; aMethod : TProc) : TTest4DCore;
     class procedure Run;
+    class function Version : string;
   end;
+
+const
+  TEST4D_VERSION = '1.0.2';
 
 implementation
 
@@ -121,7 +125,7 @@ begin
   Writeln('8     88     88              88     88           88  88   88   8');
   Writeln('8     88     88888888  88888888     88           88  888888    8');
   WriteLn('8                                                              8');
-  WriteLn('8  Version: 1.0.0                                              8');
+  WriteLn('8  Version: ' + Version + '                                    8');
   Writeln('8  Created by Ricardo Pontes | github.com/ricardo-pontes       8');
   Writeln('8888888888888888888888888888888888888888888888888888888888888888');
   WriteLn('');
@@ -272,6 +276,11 @@ class function TTest4DCore.TestOnly(aName : string; aMethod : TProc) : TTest4DCo
 begin
   Result := GetDefaultInstance;
   AddMethod(TTestMethodStatus.Only, aName, aMethod);
+end;
+
+class function TTest4DCore.Version: string;
+begin
+  Result := TEST4D_VERSION;
 end;
 
 end.
