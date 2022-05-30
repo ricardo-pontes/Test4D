@@ -9,7 +9,8 @@ uses
   System.Classes,
   System.TypInfo,
   System.Variants,
-  Test4D.Types;
+  Test4D.Types,
+  Test4D.Core;
 
 
 type
@@ -66,18 +67,21 @@ implementation
 
 class procedure Assert.AreEqual(const aValue, aTobe : string; const aMessage : string);
 begin
+  TTest4DCore.IncValidation;
   if aValue <> aTobe then
     ThrowAssertException(aValue, aTobe, aMessage);
 end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: integer; const aMessage : string);
 begin
+  TTest4DCore.IncValidation;
   if aValue <> aTobe then
     ThrowAssertException(aValue, aTobe, aMessage);
 end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: Extended; const aMessage : string);
 begin
+  TTest4DCore.IncValidation;
   if not SameValue(aValue, aTobe, 0) then
     ThrowAssertException(aValue, aTobe, aMessage);
 end;
@@ -95,6 +99,7 @@ end;
 
 class procedure Assert.WillNotRaise(const aValue: TProc);
 begin
+  TTest4DCore.IncValidation;
   try
     aValue();
   except on E: Exception do
@@ -106,6 +111,7 @@ end;
 
 class procedure Assert.WillRaise(const aValue: TProc);
 begin
+  TTest4DCore.IncValidation;
   try
     aValue();
   except on E: Exception do
@@ -117,24 +123,28 @@ end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: Double; const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if not SameValue(aValue, aTobe, 0) then
     ThrowAssertException(aValue, aTobe, aMessage);
 end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: Word; const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aValue <> aTobe then
     ThrowAssertException(aValue, aTobe, aMessage);
 end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: Cardinal; const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aValue <> aTobe then
     ThrowAssertException(aValue, aTobe, aMessage);
 end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: Boolean; const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aValue <> aTobe then
     ThrowAssertException(aValue, aTobe, aMessage);
 end;
@@ -142,6 +152,7 @@ end;
 class procedure Assert.AreEqual(const aValue, aTobe: TStream;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if not StreamsAreEqual(aValue, aTobe) then
     raise Test4DExceptionAssert.Create('Streams are not equal ' + aMessage);
 end;
@@ -149,6 +160,7 @@ end;
 class procedure Assert.AreNotEqual(const aValue, aTobe: Boolean;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aValue = aTobe then
     ThrowAssertExceptionAreNotEqual(aValue, aTobe, aMessage);
 end;
@@ -156,6 +168,7 @@ end;
 class procedure Assert.AreNotEqual(const aValue, aTobe: Cardinal;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aValue = aTobe then
     ThrowAssertExceptionAreNotEqual(aValue, aTobe, aMessage);
 end;
@@ -163,12 +176,14 @@ end;
 class procedure Assert.AreNotEqual(const aValue, aTobe: Word;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aValue = aTobe then
     ThrowAssertExceptionAreNotEqual(aValue, aTobe, aMessage);
 end;
 
 class procedure Assert.AreNotEqual(const aValue, aTobe, aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aValue = aTobe then
     ThrowAssertExceptionAreNotEqual(aValue, aTobe, aMessage);
 end;
@@ -176,6 +191,7 @@ end;
 class procedure Assert.AreNotEqual(const aValue, aTobe: integer;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aValue = aTobe then
     ThrowAssertExceptionAreNotEqual(aValue, aTobe, aMessage);
 end;
@@ -183,6 +199,7 @@ end;
 class procedure Assert.AreNotEqual(const aValue, aTobe: TStream;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if not StreamsAreEqual(aValue, aTobe) then
     Exit;
 
@@ -199,6 +216,7 @@ end;
 class procedure Assert.AreNotEqualMemory(const aValue, aTobe: Pointer;
   const size: Cardinal; const amessage: string);
 begin
+  TTest4DCore.IncValidation;
   if CompareMem(aValue, aTobe, size) then
     raise Test4DExceptionAssert.Create('Memory values are equal ' + aMessage);
 end;
@@ -206,6 +224,7 @@ end;
 class function Assert.Implements<T>(aValue: IInterface;
   const aMessage: string): T;
 begin
+  TTest4DCore.IncValidation;
   if not Supports(aValue, GetTypeData(TypeInfo(T)).Guid,result) then
     raise Test4DExceptionAssert.Create('value does not implement ' + GetTypeName(TypeInfo(T)) + aMessage);
 end;
@@ -213,6 +232,7 @@ end;
 class procedure Assert.IsFalse(const aCondition: boolean;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aCondition then
     raise Test4DExceptionAssert.Create('Condition is True when False expected. ' + aMessage);
 end;
@@ -220,6 +240,7 @@ end;
 class procedure Assert.IsNotNull(const aCondition: IInterface;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aCondition = nil then
     raise Test4DExceptionAssert.Create('Interface is Nil when not nil expected. ' + aMessage);
 end;
@@ -227,6 +248,7 @@ end;
 class procedure Assert.IsNotNull(const aCondition: Pointer;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aCondition = nil then
     raise Test4DExceptionAssert.Create('Pointer is Nil when Not Nil expected. ' + aMessage);
 end;
@@ -234,6 +256,7 @@ end;
 class procedure Assert.IsNotNull(const aCondition: TObject;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aCondition = nil then
     raise Test4DExceptionAssert.Create('Object is Nil when Not Nil expected. ' + aMessage);
 end;
@@ -241,6 +264,7 @@ end;
 class procedure Assert.IsNotNull(const aCondition: Variant;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if VarIsNull(aCondition) then
     raise Test4DExceptionAssert.Create('Variant is Null when not Null expected. ' + aMessage);
 end;
@@ -248,6 +272,7 @@ end;
 class procedure Assert.IsNull(const aCondition: Variant;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if not VarIsNull(aCondition) then
     raise Test4DExceptionAssert.Create('Variant is Not Null when Null expected. ' + aMessage);
 end;
@@ -255,6 +280,7 @@ end;
 class procedure Assert.IsNull(const aCondition: IInterface;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aCondition <> nil then
     raise Test4DExceptionAssert.Create('Interface is not Nil when nil expected. ' + aMessage);
 end;
@@ -262,6 +288,7 @@ end;
 class procedure Assert.IsNull(const aCondition: TObject;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aCondition <> nil then
     raise Test4DExceptionAssert.Create('Object is not nil when nil expected. ' + aMessage);
 end;
@@ -269,6 +296,7 @@ end;
 class procedure Assert.IsNull(const aCondition: Pointer;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aCondition <> nil then
     raise Test4DExceptionAssert.Create('Pointer is not Nil when nil expected. ' + aMessage);
 end;
@@ -276,6 +304,7 @@ end;
 class procedure Assert.IsTrue(const aCondition: boolean;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if not aCondition then
     raise Test4DExceptionAssert.Create('Condition is False when True expected. ' + aMessage);
 end;
@@ -283,6 +312,7 @@ end;
 class procedure Assert.AreNotEqual(const aValue, aTobe: TClass;
   const aMessage: string);
 begin
+  TTest4DCore.IncValidation;
   if aValue = aTobe then
     ThrowAssertExceptionAreNotEqual(aValue.ClassName, aTobe.ClassName, aMessage);
 end;

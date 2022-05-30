@@ -4,7 +4,8 @@ interface
 
 uses
   System.SysUtils,
-  System.Generics.Collections, Test4D.Types, Winapi.Windows;
+  System.Generics.Collections,
+  Winapi.Windows;
 
 type
   {$SCOPEDENUMS ON}
@@ -27,6 +28,7 @@ type
     class var FTotalTestsSkipped : integer;
     class var FTotalTestsFailed : integer;
     class var FTotalTestsWithCodeErrors : integer;
+    class var FTotalValidations : integer;
     class var FDefaultInstance : TTest4DCore;
     class procedure AddMethod(aStatus : TTestMethodStatus; aName : string; aMethod : TProc);
     class procedure SetFailedTest(var aTest : TTestMethod; aStatusMessage : string);
@@ -41,7 +43,7 @@ type
   public
     constructor Create;
     class destructor Destroy;
-
+    class procedure IncValidation;
     class function Test(aName : string; aMethod : TProc) : TTest4DCore;
     class function TestOnly(aName : string; aMethod : TProc) : TTest4DCore;
     class function Skip(aName : string; aMethod : TProc) : TTest4DCore;
@@ -53,6 +55,9 @@ const
   TEST4D_VERSION = '1.0.2';
 
 implementation
+
+uses
+  Test4D.Types;
 
 { TTest4DCore }
 
@@ -113,6 +118,11 @@ begin
       Break;
     end;
   end;
+end;
+
+class procedure TTest4DCore.IncValidation;
+begin
+  Inc(FTotalValidations);
 end;
 
 class procedure TTest4DCore.PrintConsoleHeader;
@@ -176,6 +186,7 @@ end;
 class procedure TTest4DCore.PrintConsoleTotals;
 begin
   Writeln('Total Tests: ' + FTotalTests.ToString);
+  WriteLn('Total Validations: ' + FTotalValidations.ToString);
   WriteLn('Total Skipped: ' + FTotalTestsSkipped.ToString);
   SetColorConsole(TConsoleColor.Green);
   WriteLn('Total Passed: ' + FTotalTestsPassed.ToString);
@@ -204,6 +215,8 @@ begin
   FTotalTestsSkipped        := 0;
   FTotalTestsFailed         := 0;
   FTotalTestsWithCodeErrors := 0;
+  FTotalValidations         := 0;
+
   FTotalTests               := FTests.Count;
 
   lHasTestOnly := HasTestOnly;
