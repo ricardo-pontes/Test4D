@@ -52,7 +52,7 @@ type
   end;
 
 const
-  TEST4D_VERSION = '1.0.2';
+  TEST4D_VERSION = '1.2.0';
 
 implementation
 
