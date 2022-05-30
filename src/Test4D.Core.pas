@@ -135,7 +135,7 @@ begin
   Writeln('8     88     88              88     88           88  88   88   8');
   Writeln('8     88     88888888  88888888     88           88  888888    8');
   WriteLn('8                                                              8');
-  WriteLn('8  Version: ' + Version + '                                    8');
+  WriteLn('8  Version: ' + Version + '                                              8');
   Writeln('8  Created by Ricardo Pontes | github.com/ricardo-pontes       8');
   Writeln('8888888888888888888888888888888888888888888888888888888888888888');
   WriteLn('');
@@ -185,6 +185,8 @@ end;
 
 class procedure TTest4DCore.PrintConsoleTotals;
 begin
+  SetColorConsole(TConsoleColor.White);
+  WriteLn('');
   Writeln('Total Tests: ' + FTotalTests.ToString);
   WriteLn('Total Validations: ' + FTotalValidations.ToString);
   WriteLn('Total Skipped: ' + FTotalTestsSkipped.ToString);
@@ -261,8 +263,8 @@ begin
   end;
 
   WriteLn('');
-  PrintConsoleTotals;
   PrintConsoleFailedTests;
+  PrintConsoleTotals;
   Readln;
 end;
 
