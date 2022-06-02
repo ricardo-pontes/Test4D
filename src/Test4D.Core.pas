@@ -22,7 +22,7 @@ type
 
   TTest4DCore = class
   private
-    class var FTests : TDictionary<string, TTestMethod>;
+    class var FTests : TList<TTestMethod>;
     class var FTotalTests : integer;
     class var FTotalTestsPassed : integer;
     class var FTotalTestsSkipped : integer;
@@ -31,8 +31,8 @@ type
     class var FTotalValidations : integer;
     class var FDefaultInstance : TTest4DCore;
     class procedure AddMethod(aStatus : TTestMethodStatus; aName : string; aMethod : TProc);
-    class procedure SetFailedTest(var aTest : TTestMethod; aStatusMessage : string);
-    class procedure SetCodeErrorTest(var aTest : TTestMethod; aStatusMessage : string);
+    class procedure SetFailedTest(aIndex : integer; aStatusMessage : string);
+    class procedure SetCodeErrorTest(aTest : TTestMethod; aStatusMessage : string);
     class procedure SetColorConsole(AColor:TConsoleColor);
     class function GetDefaultInstance : TTest4DCore;
     class procedure PrintConsoleHeader;
@@ -52,7 +52,7 @@ type
   end;
 
 const
-  TEST4D_VERSION = '1.2.0';
+  TEST4D_VERSION = '1.2.1';
 
 implementation
 
@@ -82,18 +82,21 @@ begin
   lTestMethod.Status := aStatus;
   lTestMethod.Name   := aName;
   lTestMethod.Method := aMethod;
-  FTests.Add(aName, lTestMethod);
+  FTests.Add(lTestMethod);
 end;
 
 constructor TTest4DCore.Create;
 begin
-  FTests := TDictionary<string, TTestMethod>.Create;
+  FTests := TList<TTestMethod>.Create;
   FDefaultInstance := Self;
 end;
 
 class destructor TTest4DCore.Destroy;
 begin
   FTests.DisposeOf;
+  if Assigned(FDefaultInstance) then
+    FDefaultInstance.DisposeOf;
+
   inherited;
 end;
 
@@ -108,10 +111,10 @@ end;
 class function TTest4DCore.HasTestOnly: boolean;
 begin
   Result := False;
-  for var lKey in FTests.Keys do
+  for var lTestMethod in FTests do
   begin
-    var lTestMethod : TTestMethod;
-    FTests.TryGetValue(lKey, lTestMethod);
+
+//    FTests.TryGetValue(lKey, lTestMethod);
     if lTestMethod.Status = TTestMethodStatus.Only then
     begin
       Result := True;
@@ -146,39 +149,40 @@ var
   lKey : string;
   lTestMethod : TTestMethod;
 begin
-  for lKey in FTests.Keys do
+  for var I := 0 to Pred(FTests.Count) do
   begin
-    FTests.TryGetValue(lKey, lTestMethod);
-    if not (lTestMethod.Status = TTestMethodStatus.Only) then
+//    FTests.TryGetValue(lKey, lTestMethod);
+    if not (FTests.Items[I].Status = TTestMethodStatus.Only) then
     begin
+      lTestMethod := FTests.ExtractAt(I);
       lTestMethod.Status := TTestMethodStatus.Skipped;
-      FTests.AddOrSetValue(lKey, lTestMethod);
+      FTests.Add(lTestMethod);
       Continue;
     end;
+    lTestMethod := FTests.ExtractAt(I);
     lTestMethod.Status := TTestMethodStatus.Active;
-    FTests.AddOrSetValue(lKey, lTestMethod);      
-  end; 
+    FTests.Add(lTestMethod);
+  end;
 end;
 
 class procedure TTest4DCore.PrintConsoleFailedTests;
 begin
   WriteLn('');
-  for var lKey in FTests.Keys do
+  for var I := 0 to Pred(FTests.Count) do
   begin
-    var lTestMethod := FTests.Items[lKey];
-    if lTestMethod.Status = TTestMethodStatus.Failed then
+    if FTests.Items[I].Status = TTestMethodStatus.Failed then
     begin
       SetColorConsole(TConsoleColor.Red);
       WriteLn('');
-      Writeln('Method ' + lTestMethod.Name + ':');
-      WriteLn('  * ' + lTestMethod.StatusMessage);
+      Writeln('Method ' + FTests.Items[I].Name + ':');
+      WriteLn('  * ' + FTests.Items[I].StatusMessage);
     end
-    else if lTestMethod.Status = TTestMethodStatus.CodeError then
+    else if FTests.Items[I].Status = TTestMethodStatus.CodeError then
     begin
       SetColorConsole(TConsoleColor.Maroon);
       WriteLn('');
-      Writeln('Method ' + lTestMethod.Name + ':');
-      WriteLn('  * ' + lTestMethod.StatusMessage);
+      Writeln('Method ' + FTests.Items[I].Name + ':');
+      WriteLn('  * ' + FTests.Items[I].StatusMessage);
     end;
   end;
 end;
@@ -188,21 +192,24 @@ begin
   SetColorConsole(TConsoleColor.White);
   WriteLn('');
   Writeln('Total Tests: ' + FTotalTests.ToString);
-  WriteLn('Total Validations: ' + FTotalValidations.ToString);
   WriteLn('Total Skipped: ' + FTotalTestsSkipped.ToString);
   SetColorConsole(TConsoleColor.Green);
   WriteLn('Total Passed: ' + FTotalTestsPassed.ToString);
   SetColorConsole(TConsoleColor.Red);
   WriteLn('Total Failed: ' + FTotalTestsFailed.ToString);
   SetColorConsole(TConsoleColor.Maroon);
-  WriteLn('Total with code errors: ' + FTotalTestsWithCodeErrors.ToString);
+  WriteLn('Total with errors in the code: ' + FTotalTestsWithCodeErrors.ToString);
 end;
 
-class procedure TTest4DCore.SetFailedTest(var aTest : TTestMethod; aStatusMessage : string);
+class procedure TTest4DCore.SetFailedTest(aIndex : integer; aStatusMessage : string);
 begin
   Inc(FTotalTestsFailed);
-  aTest.Status        := TTestMethodStatus.Failed;
-  aTest.StatusMessage := aStatusMessage;
+  var lTestMethod := FTests.ExtractAt(aIndex);
+  lTestMethod.Status := TTestMethodStatus.Failed;
+  lTestMethod.StatusMessage := aStatusMessage;
+  FTests.Insert(aIndex, lTestMethod);
+//  aTest.Status        := TTestMethodStatus.Failed;
+//  aTest.StatusMessage := aStatusMessage;
 end;
 
 class procedure TTest4DCore.Run;
@@ -224,39 +231,37 @@ begin
   lHasTestOnly := HasTestOnly;
   if lHasTestOnly then
     PrepareTestsForUniqueTest;
-    
-  for var lKey in FTests.Keys do
+
+  for var I := 0 to Pred(FTests.Count) do
   begin
-    var lTestMethod : TTestMethod;
-    FTests.TryGetValue(lKey, lTestMethod);
     SetColorConsole(TConsoleColor.Gray);
-    Writeln(lTestMethod.Name);
+    Writeln(FTests.Items[I].Name);
     SetColorConsole(TConsoleColor.White);
-    if lTestMethod.Status = TTestMethodStatus.Skipped then
+    if FTests.Items[I].Status = TTestMethodStatus.Skipped then
     begin
       Inc(FTotalTestsSkipped);
       Continue;
     end;
 
     try
-      lTestMethod.Method();
+      FTests.Items[I].Method();
       Inc(FTotalTestsPassed);
     except on E: Exception do
       begin
         if E is Test4DExceptionAssert then
-          SetFailedTest(lTestMethod, E.Message)
+          SetFailedTest(I, E.Message)
         else if E is Test4DExceptionNotThrowedWillRaise then
-          SetFailedTest(lTestMethod, E.Message)
+          SetFailedTest(I, E.Message)
         else if E is Test4DExceptionThrowedWillRaise then
-          Inc(FTotalTestsPassed)     
+          Inc(FTotalTestsPassed)
         else if E is Test4DExceptionNotThrowedWillNotRaise then
           Inc(FTotalTestsPassed)
         else if E is Test4DExceptionThrowedWillNotRaise then
-          SetFailedTest(lTestMethod, E.Message)     
-        else     
-          SetCodeErrorTest(lTestMethod, E.Message);
+          SetFailedTest(I, E.Message)
+        else
+          SetCodeErrorTest(FTests.Items[I], E.Message);
 
-        FTests.AddOrSetValue(lKey, lTestMethod);
+//        FTests.AddOrSetValue(lKey, lTestMethod);
         Continue;
       end;
     end;
@@ -268,7 +273,7 @@ begin
   Readln;
 end;
 
-class procedure TTest4DCore.SetCodeErrorTest(var aTest : TTestMethod; aStatusMessage : string);
+class procedure TTest4DCore.SetCodeErrorTest(aTest : TTestMethod; aStatusMessage : string);
 begin
   Inc(FTotalTestsWithCodeErrors);
   aTest.Status        := TTestMethodStatus.CodeError;
