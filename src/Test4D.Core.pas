@@ -32,7 +32,7 @@ type
     class var FDefaultInstance : TTest4DCore;
     class procedure AddMethod(aStatus : TTestMethodStatus; aName : string; aMethod : TProc);
     class procedure SetFailedTest(aIndex : integer; aStatusMessage : string);
-    class procedure SetCodeErrorTest(aTest : TTestMethod; aStatusMessage : string);
+    class procedure SetCodeErrorTest(aIndex : integer; aStatusMessage : string);
     class procedure SetColorConsole(AColor:TConsoleColor);
     class function GetDefaultInstance : TTest4DCore;
     class procedure PrintConsoleHeader;
@@ -52,7 +52,7 @@ type
   end;
 
 const
-  TEST4D_VERSION = '1.2.1';
+  TEST4D_VERSION = '1.2.2';
 
 implementation
 
@@ -208,8 +208,6 @@ begin
   lTestMethod.Status := TTestMethodStatus.Failed;
   lTestMethod.StatusMessage := aStatusMessage;
   FTests.Insert(aIndex, lTestMethod);
-//  aTest.Status        := TTestMethodStatus.Failed;
-//  aTest.StatusMessage := aStatusMessage;
 end;
 
 class procedure TTest4DCore.Run;
@@ -259,7 +257,7 @@ begin
         else if E is Test4DExceptionThrowedWillNotRaise then
           SetFailedTest(I, E.Message)
         else
-          SetCodeErrorTest(FTests.Items[I], E.Message);
+          SetCodeErrorTest(I, E.Message);
 
 //        FTests.AddOrSetValue(lKey, lTestMethod);
         Continue;
@@ -273,11 +271,13 @@ begin
   Readln;
 end;
 
-class procedure TTest4DCore.SetCodeErrorTest(aTest : TTestMethod; aStatusMessage : string);
+class procedure TTest4DCore.SetCodeErrorTest(aIndex : integer; aStatusMessage : string);
 begin
   Inc(FTotalTestsWithCodeErrors);
-  aTest.Status        := TTestMethodStatus.CodeError;
-  aTest.StatusMessage := aStatusMessage;
+  var lTestMethod := FTests.ExtractAt(aIndex);
+  lTestMethod.Status := TTestMethodStatus.Failed;
+  lTestMethod.StatusMessage := aStatusMessage;
+  FTests.Insert(aIndex, lTestMethod);
 end;
 
 class function TTest4DCore.Skip(aName : string; aMethod : TProc) : TTest4DCore;
