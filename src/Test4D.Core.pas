@@ -52,7 +52,7 @@ type
   end;
 
 const
-  TEST4D_VERSION = '1.2.2';
+  TEST4D_VERSION = '1.2.3';
 
 implementation
 
@@ -113,8 +113,6 @@ begin
   Result := False;
   for var lTestMethod in FTests do
   begin
-
-//    FTests.TryGetValue(lKey, lTestMethod);
     if lTestMethod.Status = TTestMethodStatus.Only then
     begin
       Result := True;
@@ -145,23 +143,20 @@ begin
 end;
 
 class procedure TTest4DCore.PrepareTestsForUniqueTest;
-var
-  lKey : string;
-  lTestMethod : TTestMethod;
+
 begin
   for var I := 0 to Pred(FTests.Count) do
   begin
-//    FTests.TryGetValue(lKey, lTestMethod);
     if not (FTests.Items[I].Status = TTestMethodStatus.Only) then
     begin
-      lTestMethod := FTests.ExtractAt(I);
+      var lTestMethod := FTests.Extract(FTests.Items[I]);
       lTestMethod.Status := TTestMethodStatus.Skipped;
-      FTests.Add(lTestMethod);
+      FTests.Insert(I, lTestMethod);
       Continue;
     end;
-    lTestMethod := FTests.ExtractAt(I);
+    var lTestMethod := FTests.Extract(FTests.Items[I]);
     lTestMethod.Status := TTestMethodStatus.Active;
-    FTests.Add(lTestMethod);
+    FTests.Insert(I, lTestMethod);
   end;
 end;
 
