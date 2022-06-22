@@ -18,6 +18,8 @@ type
     StatusMessage : string;
     Name : string;
     Method : TProc;
+    BeforeTest : TProc;
+    AfterTest : TProc;
   end;
 
   TTest4DCore = class
@@ -30,7 +32,7 @@ type
     class var FTotalTestsWithCodeErrors : integer;
     class var FTotalValidations : integer;
     class var FDefaultInstance : TTest4DCore;
-    class procedure AddMethod(aStatus : TTestMethodStatus; aName : string; aMethod : TProc);
+    class procedure AddMethod(aStatus : TTestMethodStatus; aName : string; aMethod : TProc; aBeforeTest : Tproc = nil; aAfterTest : TProc = nil);
     class procedure SetFailedTest(aIndex : integer; aStatusMessage : string);
     class procedure SetCodeErrorTest(aIndex : integer; aStatusMessage : string);
     class procedure SetColorConsole(AColor:TConsoleColor);
@@ -44,15 +46,19 @@ type
     constructor Create;
     class destructor Destroy;
     class procedure IncValidation;
-    class function Test(aName : string; aMethod : TProc) : TTest4DCore;
-    class function TestOnly(aName : string; aMethod : TProc) : TTest4DCore;
-    class function Skip(aName : string; aMethod : TProc) : TTest4DCore;
+    class function Test(aName : string; aMethod : TProc) : TTest4DCore; overload;
+    class function Test(aName : string; aMethod : TProc; aBeforeTest : TProc; aAfterTest : TProc) : TTest4DCore; overload;
+    class function TestOnly(aName : string; aMethod : TProc) : TTest4DCore; overload;
+    class function TestOnly(aName : string; aMethod : TProc; aBeforeTest : TProc; aAfterTest : TProc) : TTest4DCore; overload;
+    class function Skip(aName : string; aMethod : TProc) : TTest4DCore; overload;
+    class function Skip(aName : string; aMethod : TProc; aBeforeTest : TProc; aAfterTest : TProc) : TTest4DCore; overload;
     class procedure Run;
     class function Version : string;
   end;
 
 const
-  TEST4D_VERSION = '1.2.3';
+  TEST4D_VERSION = '1.3.0';
+  UTF8_CHECKMARK = #$E2#$9C#$93;
 
 implementation
 
@@ -76,12 +82,14 @@ begin
   end;
 end;
 
-class procedure TTest4DCore.AddMethod(aStatus : TTestMethodStatus; aName : string; aMethod : TProc);
+class procedure TTest4DCore.AddMethod(aStatus : TTestMethodStatus; aName : string; aMethod : TProc; aBeforeTest : Tproc = nil; aAfterTest : TProc = nil);
 begin
   var lTestMethod : TTestMethod;
   lTestMethod.Status := aStatus;
   lTestMethod.Name   := aName;
   lTestMethod.Method := aMethod;
+  lTestMethod.BeforeTest := aBeforeTest;
+  lTestMethod.AfterTest := aAfterTest;
   FTests.Add(lTestMethod);
 end;
 
@@ -139,7 +147,6 @@ begin
   WriteLn('8  Version: ' + Version + '                                              8');
   Writeln('8  Created by Ricardo Pontes | github.com/ricardo-pontes       8');
   Writeln('8888888888888888888888888888888888888888888888888888888888888888');
-  WriteLn('');
 end;
 
 class procedure TTest4DCore.PrepareTestsForUniqueTest;
@@ -205,6 +212,12 @@ begin
   FTests.Insert(aIndex, lTestMethod);
 end;
 
+class function TTest4DCore.Skip(aName: string; aMethod, aBeforeTest, aAfterTest: TProc): TTest4DCore;
+begin
+  Result := GetDefaultInstance;
+  AddMethod(TTestMethodStatus.Skipped, aName, aMethod, aBeforeTest, aAfterTest);
+end;
+
 class procedure TTest4DCore.Run;
 var
   lHasTestOnly : boolean;
@@ -237,8 +250,14 @@ begin
     end;
 
     try
+      if Assigned(FTests.Items[I].BeforeTest) then
+        FTests.Items[I].BeforeTest();
+
       FTests.Items[I].Method();
       Inc(FTotalTestsPassed);
+
+      if Assigned(FTests.Items[I].AfterTest) then
+        FTests.Items[I].AfterTest();
     except on E: Exception do
       begin
         if E is Test4DExceptionAssert then
@@ -254,7 +273,6 @@ begin
         else
           SetCodeErrorTest(I, E.Message);
 
-//        FTests.AddOrSetValue(lKey, lTestMethod);
         Continue;
       end;
     end;
@@ -281,7 +299,19 @@ begin
   AddMethod(TTestMethodStatus.Skipped, aName, aMethod);
 end;
 
-class function TTest4DCore.Test(aName : string; aMethod : TProc) : TTest4DCore;
+class function TTest4DCore.Test(aName : string; aMethod : TProc; aBeforeTest : TProc; aAfterTest : TProc) : TTest4DCore;
+begin
+  Result := GetDefaultInstance;
+  AddMethod(TTestMethodStatus.Active, aName, aMethod, aBeforeTest, aAfterTest);
+end;
+
+class function TTest4DCore.TestOnly(aName: string; aMethod, aBeforeTest, aAfterTest: TProc): TTest4DCore;
+begin
+  Result := GetDefaultInstance;
+  AddMethod(TTestMethodStatus.Only, aName, aMethod, aBeforeTest, aAfterTest);
+end;
+
+class function TTest4DCore.Test(aName: string; aMethod: TProc): TTest4DCore;
 begin
   Result := GetDefaultInstance;
   AddMethod(TTestMethodStatus.Active, aName, aMethod);
