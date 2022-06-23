@@ -57,7 +57,7 @@ type
   end;
 
 const
-  TEST4D_VERSION = '1.3.0';
+  TEST4D_VERSION = '1.3.1';
   UTF8_CHECKMARK = #$E2#$9C#$93;
 
 implementation
@@ -137,16 +137,12 @@ end;
 class procedure TTest4DCore.PrintConsoleHeader;
 begin
   Writeln('8888888888888888888888888888888888888888888888888888888888888888');
-  WriteLn('8                                                              8');
-  Writeln('8  88888888  88888888  88888888  88888888  88    88  888888    8');
-  Writeln('8     88     88        88           88     88    88  88   88   8');
-  Writeln('8     88     88888888  88888888     88     88888888  88    88  8');
-  Writeln('8     88     88              88     88           88  88   88   8');
-  Writeln('8     88     88888888  88888888     88           88  888888    8');
+  Writeln('8             TEST4D (C) 2022 - Apache License 2.0             8');
   WriteLn('8                                                              8');
   WriteLn('8  Version: ' + Version + '                                              8');
   Writeln('8  Created by Ricardo Pontes | github.com/ricardo-pontes       8');
   Writeln('8888888888888888888888888888888888888888888888888888888888888888');
+  WriteLn('');
 end;
 
 class procedure TTest4DCore.PrepareTestsForUniqueTest;

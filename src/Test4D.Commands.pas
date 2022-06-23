@@ -42,8 +42,8 @@ type
 
     class procedure AreNotEqualMemory(const aValue : Pointer; const aTobe : Pointer; const size : Cardinal; const amessage : string = '');
 
-    class procedure WillRaise(const aValue : TProc);
-    class procedure WillNotRaise(const aValue : TProc);
+    class procedure WillRaise(const aValue : TProc; aMessage : string = '');
+    class procedure WillNotRaise(const aValue: TProc; aMessage : string = '');
 
     class function Implements<T : IInterface>(aValue : IInterface; const aMessage : string = '' ) : T;
 
@@ -88,28 +88,37 @@ end;
 
 class procedure Assert.ThrowAssertException(aValue, aTobe: TValue; aMessage : string);
 begin
-  raise Test4DExceptionAssert.Create('Expected: ' + aTobe.ToString + '  Found: ' + aValue.ToString + ' ' + aMessage);
+  if aMessage.IsEmpty then
+    raise Test4DExceptionAssert.Create('Expected: ' + aTobe.ToString + '  Found: ' + aValue.ToString)
+  else
+    raise Test4DExceptionAssert.Create('Expected: ' + aTobe.ToString + '  Found: ' + aValue.ToString + ' [' + aMessage + ']');
 end;
 
 class procedure Assert.ThrowAssertExceptionAreNotEqual(aValue, aTobe: TValue;
   aMessage: string);
 begin
-  raise Test4DExceptionAssert.Create(aValue.ToString + ' are equal to ' + aTobe.ToString + ' ' + aMessage);
+  if aMessage.IsEmpty then
+    raise Test4DExceptionAssert.Create(aValue.ToString + ' are equal to ' + aTobe.ToString)
+  else
+    raise Test4DExceptionAssert.Create(aValue.ToString + ' are equal to ' + aTobe.ToString + ' [' + aMessage + ']');
 end;
 
-class procedure Assert.WillNotRaise(const aValue: TProc);
+class procedure Assert.WillNotRaise(const aValue: TProc; aMessage : string);
 begin
   TTest4DCore.IncValidation;
   try
     aValue();
   except on E: Exception do
-    raise Test4DExceptionThrowedWillNotRaise.Create('Exception not expected but throwed');
+    if aMessage.IsEmpty then
+      raise Test4DExceptionThrowedWillNotRaise.Create('Exception not expected but throwed.')
+    else
+      raise Test4DExceptionThrowedWillNotRaise.Create('Exception not expected but throwed. [' + aMessage + ']')
   end;
 
   raise Test4DExceptionNotThrowedWillNotRaise.Create('');
 end;
 
-class procedure Assert.WillRaise(const aValue: TProc);
+class procedure Assert.WillRaise(const aValue : TProc; aMessage : string = '');
 begin
   TTest4DCore.IncValidation;
   try
@@ -118,7 +127,10 @@ begin
     raise Test4DExceptionThrowedWillRaise.Create(E.Message);
   end;
 
-  raise Test4DExceptionNotThrowedWillRaise.Create('Exception expected but not throwed');
+  if aMessage.IsEmpty then
+    raise Test4DExceptionNotThrowedWillRaise.Create('Exception expected but not throwed.')
+  else
+    raise Test4DExceptionNotThrowedWillRaise.Create('Exception expected but not throwed. [' + aMessage + ']')
 end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: Double; const aMessage: string);
