@@ -5,7 +5,10 @@ interface
 uses
   System.SysUtils,
   System.Generics.Collections,
-  Winapi.Windows;
+  Winapi.Windows,
+  Test4D.Configurations,
+  Test4D.Languages.EN,
+  Test4D.Types;
 
 type
   {$SCOPEDENUMS ON}
@@ -32,6 +35,8 @@ type
     class var FTotalTestsWithCodeErrors : integer;
     class var FTotalValidations : integer;
     class var FDefaultInstance : TTest4DCore;
+    class var FConfigurations : TTest4DConfigurations;
+
     class procedure AddMethod(aStatus : TTestMethodStatus; aName : string; aMethod : TProc; aBeforeTest : Tproc = nil; aAfterTest : TProc = nil);
     class procedure SetFailedTest(aIndex : integer; aStatusMessage : string);
     class procedure SetCodeErrorTest(aIndex : integer; aStatusMessage : string);
@@ -42,9 +47,11 @@ type
     class procedure PrintConsoleFailedTests;
     class function HasTestOnly : boolean;
     class procedure PrepareTestsForUniqueTest;
+    class function GetConfigurations: TTest4DConfigurations; static;
   public
     constructor Create;
     class destructor Destroy;
+    class function Use(aLanguage : iTest4DLanguage) : TTest4DCore;
     class procedure IncValidation;
     class function Test(aName : string; aMethod : TProc) : TTest4DCore; overload;
     class function Test(aName : string; aMethod : TProc; aBeforeTest : TProc; aAfterTest : TProc) : TTest4DCore; overload;
@@ -54,16 +61,15 @@ type
     class function Skip(aName : string; aMethod : TProc; aBeforeTest : TProc; aAfterTest : TProc) : TTest4DCore; overload;
     class procedure Run;
     class function Version : string;
+    class property Configurations : TTest4DConfigurations read GetConfigurations;
   end;
 
 const
-  TEST4D_VERSION = '1.3.1';
+  TEST4D_VERSION = '1.4.0';
   UTF8_CHECKMARK = #$E2#$9C#$93;
 
 implementation
 
-uses
-  Test4D.Types;
 
 { TTest4DCore }
 
@@ -97,6 +103,8 @@ constructor TTest4DCore.Create;
 begin
   FTests := TList<TTestMethod>.Create;
   FDefaultInstance := Self;
+  FConfigurations := TTest4DConfigurations.Create;
+  FConfigurations.Language := TTest4DLanguageEN.New;
 end;
 
 class destructor TTest4DCore.Destroy;
@@ -105,7 +113,16 @@ begin
   if Assigned(FDefaultInstance) then
     FDefaultInstance.DisposeOf;
 
+  if Assigned(FConfigurations) then
+    FConfigurations.DisposeOf;
+
   inherited;
+end;
+
+class function TTest4DCore.GetConfigurations: TTest4DConfigurations;
+begin
+  GetDefaultInstance;
+  Result := FConfigurations;
 end;
 
 class function TTest4DCore.GetDefaultInstance : TTest4DCore;
@@ -172,14 +189,14 @@ begin
     begin
       SetColorConsole(TConsoleColor.Red);
       WriteLn('');
-      Writeln('Method ' + FTests.Items[I].Name + ':');
+      Writeln(FConfigurations.Language.PrintConsoleFailedTestsMethod + FTests.Items[I].Name + ':');
       WriteLn('  * ' + FTests.Items[I].StatusMessage);
     end
     else if FTests.Items[I].Status = TTestMethodStatus.CodeError then
     begin
       SetColorConsole(TConsoleColor.Maroon);
       WriteLn('');
-      Writeln('Method ' + FTests.Items[I].Name + ':');
+      Writeln(FConfigurations.Language.PrintConsoleFailedTestsMethod + FTests.Items[I].Name + ':');
       WriteLn('  * ' + FTests.Items[I].StatusMessage);
     end;
   end;
@@ -189,14 +206,14 @@ class procedure TTest4DCore.PrintConsoleTotals;
 begin
   SetColorConsole(TConsoleColor.White);
   WriteLn('');
-  Writeln('Total Tests: ' + FTotalTests.ToString);
-  WriteLn('Total Skipped: ' + FTotalTestsSkipped.ToString);
+  Writeln(FConfigurations.Language.PrintConsoleTotalsTotalTests + FTotalTests.ToString);
+  WriteLn(FConfigurations.Language.PrintConsoleTotalsTotalSkipped + FTotalTestsSkipped.ToString);
   SetColorConsole(TConsoleColor.Green);
-  WriteLn('Total Passed: ' + FTotalTestsPassed.ToString);
+  WriteLn(FConfigurations.Language.PrintConsoleTotalsTotalPassed + FTotalTestsPassed.ToString);
   SetColorConsole(TConsoleColor.Red);
-  WriteLn('Total Failed: ' + FTotalTestsFailed.ToString);
+  WriteLn(FConfigurations.Language.PrintConsoleTotalsTotalFailed + FTotalTestsFailed.ToString);
   SetColorConsole(TConsoleColor.Maroon);
-  WriteLn('Total with errors in the code: ' + FTotalTestsWithCodeErrors.ToString);
+  WriteLn(FConfigurations.Language.PrintConsoleTotalsTotalWithErrorsOnCode + FTotalTestsWithCodeErrors.ToString);
 end;
 
 class procedure TTest4DCore.SetFailedTest(aIndex : integer; aStatusMessage : string);
@@ -219,8 +236,8 @@ var
   lHasTestOnly : boolean;
 begin
   PrintConsoleHeader;
-
-  Writeln('Test List');
+  if FConfigurations.ShowTestList = True then
+    Writeln(FConfigurations.Language.PrintTestList);
 
   FTotalTestsPassed         := 0;
   FTotalTestsSkipped        := 0;
@@ -237,7 +254,8 @@ begin
   for var I := 0 to Pred(FTests.Count) do
   begin
     SetColorConsole(TConsoleColor.Gray);
-    Writeln(FTests.Items[I].Name);
+    if FConfigurations.ShowTestList then
+      Writeln(FTests.Items[I].Name);
     SetColorConsole(TConsoleColor.White);
     if FTests.Items[I].Status = TTestMethodStatus.Skipped then
     begin
@@ -275,8 +293,8 @@ begin
   end;
 
   WriteLn('');
-  PrintConsoleFailedTests;
   PrintConsoleTotals;
+  PrintConsoleFailedTests;
   Readln;
 end;
 
@@ -305,6 +323,12 @@ class function TTest4DCore.TestOnly(aName: string; aMethod, aBeforeTest, aAfterT
 begin
   Result := GetDefaultInstance;
   AddMethod(TTestMethodStatus.Only, aName, aMethod, aBeforeTest, aAfterTest);
+end;
+
+class function TTest4DCore.Use(aLanguage: iTest4DLanguage): TTest4DCore;
+begin
+  Result := GetDefaultInstance;
+  FConfigurations.Language := aLanguage;
 end;
 
 class function TTest4DCore.Test(aName: string; aMethod: TProc): TTest4DCore;

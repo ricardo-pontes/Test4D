@@ -175,6 +175,9 @@
         <DCCReference Include="Test4D.Types.pas"/>
         <DCCReference Include="Test4D.pas"/>
         <DCCReference Include="Test4D.Commands.pas"/>
+        <DCCReference Include="Test4D.Configurations.pas"/>
+        <DCCReference Include="Test4D.Languages.EN.pas"/>
+        <DCCReference Include="Test4D.Languages.PTBR.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

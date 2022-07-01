@@ -9,9 +9,13 @@ uses
   Test4D.Core in 'Test4D.Core.pas',
   Test4D.Types in 'Test4D.Types.pas',
   Test4D in 'Test4D.pas',
-  Test4D.Commands in 'Test4D.Commands.pas';
+  Test4D.Commands in 'Test4D.Commands.pas',
+  Test4D.Configurations in 'Test4D.Configurations.pas',
+  Test4D.Languages.EN in 'Test4D.Languages.EN.pas',
+  Test4D.Languages.PTBR in 'Test4D.Languages.PTBR.pas';
 
 begin
+  TTest4D.Use(TTest4DLanguagePTBR.New);
   TTest4D.Test('teste assert string quebrado',
   procedure
   begin
