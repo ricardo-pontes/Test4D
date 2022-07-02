@@ -65,7 +65,7 @@ type
   end;
 
 const
-  TEST4D_VERSION = '1.4.1';
+  TEST4D_VERSION = '1.4.2';
   UTF8_CHECKMARK = #$E2#$9C#$93;
 
 implementation
@@ -296,6 +296,7 @@ begin
   PrintConsoleTotals;
   PrintConsoleFailedTests;
   SetColorConsole(TConsoleColor.White);
+  WriteLn('');
   Writeln(FConfigurations.Language.PrintConsoleExitMessage);
   Readln;
 end;
