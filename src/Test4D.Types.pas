@@ -14,6 +14,7 @@ type
     function PrintConsoleTotalsTotalPassed : string;
     function PrintConsoleTotalsTotalFailed : string;
     function PrintConsoleTotalsTotalWithErrorsOnCode : string;
+    function PrintConsoleExitMessage : string;
     function PrintTestList : string;
     function AssertExceptionExpected : string;
     function AssertExceptionFound : string;

@@ -18,6 +18,7 @@ type
     function PrintConsoleTotalsTotalPassed : string;
     function PrintConsoleTotalsTotalFailed : string;
     function PrintConsoleTotalsTotalWithErrorsOnCode : string;
+    function PrintConsoleExitMessage : string;
     function PrintTestList : string;
     function AssertExceptionExpected : string;
     function AssertExceptionFound : string;
@@ -142,6 +143,11 @@ end;
 class function TTest4DLanguageEN.New: iTest4DLanguage;
 begin
   Result := Self.Create;
+end;
+
+function TTest4DLanguageEN.PrintConsoleExitMessage: string;
+begin
+  Result := '<Press any key to exit.>';
 end;
 
 function TTest4DLanguageEN.PrintConsoleFailedTestsMethod: string;

@@ -18,6 +18,7 @@ type
     function PrintConsoleTotalsTotalPassed : string;
     function PrintConsoleTotalsTotalFailed : string;
     function PrintConsoleTotalsTotalWithErrorsOnCode : string;
+    function PrintConsoleExitMessage : string;
     function PrintTestList : string;
     function AssertExceptionExpected : string;
     function AssertExceptionFound : string;
@@ -142,6 +143,11 @@ end;
 class function TTest4DLanguagePTBR.New: iTest4DLanguage;
 begin
   Result := Self.Create;
+end;
+
+function TTest4DLanguagePTBR.PrintConsoleExitMessage: string;
+begin
+  Result := '<Pressione qualquer tecla para sair>';
 end;
 
 function TTest4DLanguagePTBR.PrintConsoleFailedTestsMethod: string;
