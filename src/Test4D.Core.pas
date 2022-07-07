@@ -36,7 +36,8 @@ type
     class var FTotalValidations : integer;
     class var FDefaultInstance : TTest4DCore;
     class var FConfigurations : TTest4DConfigurations;
-
+    class var FAbort : boolean;
+    class var FAbortMessage : string;
     class procedure AddMethod(aStatus : TTestMethodStatus; aName : string; aMethod : TProc; aBeforeTest : Tproc = nil; aAfterTest : TProc = nil);
     class procedure SetFailedTest(aIndex : integer; aStatusMessage : string);
     class procedure SetCodeErrorTest(aIndex : integer; aStatusMessage : string);
@@ -90,6 +91,18 @@ end;
 
 class procedure TTest4DCore.AddMethod(aStatus : TTestMethodStatus; aName : string; aMethod : TProc; aBeforeTest : Tproc = nil; aAfterTest : TProc = nil);
 begin
+  if aStatus = TTestMethodStatus.Only then
+  begin
+    for var lTest in FTests do
+    begin
+      if lTest.Status = TTestMethodStatus.Only then
+      begin
+        FAbortMessage := 'TestOnly exists. Method: ' + lTest.Name;
+        FAbort := True;
+        Exit;
+      end;
+    end;
+  end;
   var lTestMethod : TTestMethod;
   lTestMethod.Status := aStatus;
   lTestMethod.Name   := aName;
@@ -236,6 +249,14 @@ var
   lHasTestOnly : boolean;
 begin
   PrintConsoleHeader;
+  if FAbort then
+  begin
+    Writeln('');
+    Writeln(FAbortMessage);
+    Readln;
+    Exit;
+  end;
+
   if FConfigurations.ShowTestList = True then
     Writeln(FConfigurations.Language.PrintTestList);
 

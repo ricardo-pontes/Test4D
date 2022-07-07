@@ -42,7 +42,8 @@ type
 
     class procedure AreNotEqualMemory(const aValue : Pointer; const aTobe : Pointer; const size : Cardinal; const amessage : string = '');
 
-    class procedure WillRaise(const aValue : TProc; aMessage : string = '');
+    class procedure WillRaise(const aValue : TProc; aMessage : string = ''); overload;
+    class procedure WillRaise(const aValue : TProc; aExceptionClass: ExceptClass = nil; aMessage : string = ''); overload;
     class procedure WillNotRaise(const aValue: TProc; aMessage : string = '');
 
     class function Implements<T : IInterface>(aValue : IInterface; const aMessage : string = '' ) : T;
@@ -119,6 +120,30 @@ begin
   end;
 
   raise Test4DExceptionNotThrowedWillNotRaise.Create('');
+end;
+
+class procedure Assert.WillRaise(const aValue: TProc; aExceptionClass : ExceptClass = nil; aMessage: string = '');
+begin
+  var Language := TTest4DCore.Configurations.Language;
+  TTest4DCore.IncValidation;
+  try
+    aValue();
+  except on E: Exception do
+    if E.ClassType <> aExceptionClass then
+    begin
+      if aMessage.IsEmpty then
+        raise Test4DExceptionThrowedWillRaiseWithDifExceptionType.Create(Language.AssertExceptionWillRaiseWithDifExceptionType(aExceptionClass.ClassName, E.ClassName))
+      else
+        raise Test4DExceptionThrowedWillRaiseWithDifExceptionType.Create(Language.AssertExceptionWillRaiseWithDifExceptionType(aExceptionClass.ClassName, E.ClassName) + ' [' + aMessage + ']')
+    end
+    else
+      raise Test4DExceptionThrowedWillRaise.Create(E.Message);
+  end;
+
+  if aMessage.IsEmpty then
+    raise Test4DExceptionNotThrowedWillRaise.Create(Language.AssertExceptionWillRaise)
+  else
+    raise Test4DExceptionNotThrowedWillRaise.Create(Language.AssertExceptionWillRaise + ' [' + aMessage + ']')
 end;
 
 class procedure Assert.WillRaise(const aValue : TProc; aMessage : string = '');
