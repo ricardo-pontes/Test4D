@@ -12,7 +12,8 @@ uses
   Test4D.Commands in 'Test4D.Commands.pas',
   Test4D.Configurations in 'Test4D.Configurations.pas',
   Test4D.Languages.EN in 'Test4D.Languages.EN.pas',
-  Test4D.Languages.PTBR in 'Test4D.Languages.PTBR.pas';
+  Test4D.Languages.PTBR in 'Test4D.Languages.PTBR.pas',
+  Test4D.Totals in 'Test4D.Totals.pas';
 
 begin
   TTest4D.Use(TTest4DLanguagePTBR.New);
@@ -77,7 +78,7 @@ begin
     procedure
     begin
 
-    end);
+    end, Exception);
   end);
 
   TTest4D.Test('teste willraise ok',
@@ -87,7 +88,7 @@ begin
     procedure
     begin
       raise Exception.Create('Error Message');
-    end);
+    end, Exception);
   end);
 
   TTest4D.Test('teste willnotraise quebrado',

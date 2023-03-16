@@ -17,8 +17,8 @@ type
   Assert = class
   private
     class function StreamsAreEqual(aValue, aTobe : TStream) : boolean;
-    class procedure ThrowAssertException(aValue, aTobe : TValue; aMessage : string = '');
-    class procedure ThrowAssertExceptionAreNotEqual(aValue, aTobe : TValue; aMessage : string = '');
+    class procedure FailedTestAreEqual(aValue, aTobe : TValue; aMessage : string);
+    class procedure FailedTestAreNotEqual(aValue, aTobe : TValue; aMessage : string);
   public
     class procedure AreEqual(const aValue, aTobe : string; const aMessage : string = ''); overload;
     class procedure AreEqual(const aValue, aTobe : Word; const aMessage : string = ''); overload;
@@ -70,40 +70,33 @@ class procedure Assert.AreEqual(const aValue, aTobe : string; const aMessage : s
 begin
   TTest4DCore.IncValidation;
   if aValue <> aTobe then
-    ThrowAssertException(aValue, aTobe, aMessage);
+  begin
+    FailedTestAreEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: integer; const aMessage : string);
 begin
   TTest4DCore.IncValidation;
   if aValue <> aTobe then
-    ThrowAssertException(aValue, aTobe, aMessage);
+  begin
+    FailedTestAreEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: Extended; const aMessage : string);
 begin
   TTest4DCore.IncValidation;
   if not SameValue(aValue, aTobe, 0) then
-    ThrowAssertException(aValue, aTobe, aMessage);
-end;
-
-class procedure Assert.ThrowAssertException(aValue, aTobe: TValue; aMessage : string);
-begin
-  var Language := TTest4DCore.Configurations.Language;
-  if aMessage.IsEmpty then
-    raise Test4DExceptionAssert.Create(Language.AssertExceptionExpected + aTobe.ToString + Language.AssertExceptionFound + aValue.ToString)
-  else
-    raise Test4DExceptionAssert.Create(Language.AssertExceptionExpected + aTobe.ToString + Language.AssertExceptionFound + aValue.ToString + ' [' + aMessage + ']');
-end;
-
-class procedure Assert.ThrowAssertExceptionAreNotEqual(aValue, aTobe: TValue;
-  aMessage: string);
-begin
-  var Language := TTest4DCore.Configurations.Language;
-  if aMessage.IsEmpty then
-    raise Test4DExceptionAssert.Create(aValue.ToString + Language.AssertExceptionAreNotEqual + aTobe.ToString)
-  else
-    raise Test4DExceptionAssert.Create(aValue.ToString + Language.AssertExceptionAreNotEqual + aTobe.ToString + ' [' + aMessage + ']');
+  begin
+    FailedTestAreEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.WillNotRaise(const aValue: TProc; aMessage : string);
@@ -113,13 +106,16 @@ begin
   try
     aValue();
   except on E: Exception do
-    if aMessage.IsEmpty then
-      raise Test4DExceptionThrowedWillNotRaise.Create(Language.AssertExceptionWillNotRaise)
-    else
-      raise Test4DExceptionThrowedWillNotRaise.Create(Language.AssertExceptionWillNotRaise + ' [' + aMessage + ']')
-  end;
+    begin
+      if aMessage.IsEmpty then
+        TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionWillNotRaise)
+      else
+        TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionWillNotRaise + ' [' + aMessage + ']');
 
-  raise Test4DExceptionNotThrowedWillNotRaise.Create('');
+      Exit;
+    end;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.WillRaise(const aValue: TProc; aExceptionClass : ExceptClass = nil; aMessage: string = '');
@@ -129,21 +125,25 @@ begin
   try
     aValue();
   except on E: Exception do
-    if E.ClassType <> aExceptionClass then
     begin
-      if aMessage.IsEmpty then
-        raise Test4DExceptionThrowedWillRaiseWithDifExceptionType.Create(Language.AssertExceptionWillRaiseWithDifExceptionType(aExceptionClass.ClassName, E.ClassName))
+      if E.ClassType <> aExceptionClass then
+      begin
+        if aMessage.IsEmpty then
+          TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionWillRaiseWithDifExceptionType(aExceptionClass.ClassName, E.ClassName))
+        else
+          TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionWillRaiseWithDifExceptionType(aExceptionClass.ClassName, E.ClassName) + ' [' + aMessage + ']')
+      end
       else
-        raise Test4DExceptionThrowedWillRaiseWithDifExceptionType.Create(Language.AssertExceptionWillRaiseWithDifExceptionType(aExceptionClass.ClassName, E.ClassName) + ' [' + aMessage + ']')
-    end
-    else
-      raise Test4DExceptionThrowedWillRaise.Create(E.Message);
+        TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
+
+      Exit;
+    end;
   end;
 
   if aMessage.IsEmpty then
-    raise Test4DExceptionNotThrowedWillRaise.Create(Language.AssertExceptionWillRaise)
+    TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionWillRaise)
   else
-    raise Test4DExceptionNotThrowedWillRaise.Create(Language.AssertExceptionWillRaise + ' [' + aMessage + ']')
+    TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionWillRaise + ' [' + aMessage + ']')
 end;
 
 class procedure Assert.WillRaise(const aValue : TProc; aMessage : string = '');
@@ -153,41 +153,57 @@ begin
   try
     aValue();
   except on E: Exception do
-    raise Test4DExceptionThrowedWillRaise.Create(E.Message);
+    TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
   end;
 
   if aMessage.IsEmpty then
-    raise Test4DExceptionNotThrowedWillRaise.Create(TTest4DCore.Configurations.Language.AssertExceptionWillRaise)
+    TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, TTest4DCore.Configurations.Language.AssertExceptionWillRaise)
   else
-    raise Test4DExceptionNotThrowedWillRaise.Create(TTest4DCore.Configurations.Language.AssertExceptionWillRaise + ' [' + aMessage + ']')
+    TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, TTest4DCore.Configurations.Language.AssertExceptionWillRaise + ' [' + aMessage + ']')
 end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: Double; const aMessage: string);
 begin
   TTest4DCore.IncValidation;
   if not SameValue(aValue, aTobe, 0) then
-    ThrowAssertException(aValue, aTobe, aMessage);
+  begin
+    FailedTestAreEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: Word; const aMessage: string);
 begin
   TTest4DCore.IncValidation;
   if aValue <> aTobe then
-    ThrowAssertException(aValue, aTobe, aMessage);
+  begin
+    FailedTestAreEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: Cardinal; const aMessage: string);
 begin
   TTest4DCore.IncValidation;
   if aValue <> aTobe then
-    ThrowAssertException(aValue, aTobe, aMessage);
+  begin
+    FailedTestAreEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: Boolean; const aMessage: string);
 begin
   TTest4DCore.IncValidation;
   if aValue <> aTobe then
-    ThrowAssertException(aValue, aTobe, aMessage);
+  begin
+    FailedTestAreEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.AreEqual(const aValue, aTobe: TStream;
@@ -198,10 +214,31 @@ begin
   if not StreamsAreEqual(aValue, aTobe) then
   begin
     if aMessage.IsEmpty then
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionAreEqualStream)
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionAreEqualStream)
     else
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionAreEqualStream + ' [' + aMessage + ']');
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionAreEqualStream + ' [' + aMessage + ']');
+
+    Exit;
   end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
+end;
+
+class procedure Assert.FailedTestAreEqual(aValue, aTobe: TValue; aMessage: string);
+begin
+  var Language := TTest4DCore.Configurations.Language;
+  if aMessage.IsEmpty then
+    TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionExpected + aTobe.ToString + Language.AssertExceptionFound + aValue.ToString)
+  else
+    TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionExpected + aTobe.ToString + Language.AssertExceptionFound + aValue.ToString + ' [' + aMessage + ']');
+end;
+
+class procedure Assert.FailedTestAreNotEqual(aValue, aTobe: TValue; aMessage: string);
+begin
+  var Language := TTest4DCore.Configurations.Language;
+  if aMessage.IsEmpty then
+    TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, aValue.ToString + Language.AssertExceptionAreNotEqual + aTobe.ToString)
+  else
+    TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, aValue.ToString + Language.AssertExceptionAreNotEqual + aTobe.ToString + ' [' + aMessage + ']');
 end;
 
 class procedure Assert.AreNotEqual(const aValue, aTobe: Boolean;
@@ -209,7 +246,11 @@ class procedure Assert.AreNotEqual(const aValue, aTobe: Boolean;
 begin
   TTest4DCore.IncValidation;
   if aValue = aTobe then
-    ThrowAssertExceptionAreNotEqual(aValue, aTobe, aMessage);
+  begin
+    FailedTestAreNotEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.AreNotEqual(const aValue, aTobe: Cardinal;
@@ -217,7 +258,11 @@ class procedure Assert.AreNotEqual(const aValue, aTobe: Cardinal;
 begin
   TTest4DCore.IncValidation;
   if aValue = aTobe then
-    ThrowAssertExceptionAreNotEqual(aValue, aTobe, aMessage);
+  begin
+    FailedTestAreNotEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.AreNotEqual(const aValue, aTobe: Word;
@@ -225,39 +270,52 @@ class procedure Assert.AreNotEqual(const aValue, aTobe: Word;
 begin
   TTest4DCore.IncValidation;
   if aValue = aTobe then
-    ThrowAssertExceptionAreNotEqual(aValue, aTobe, aMessage);
+  begin
+    FailedTestAreNotEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.AreNotEqual(const aValue, aTobe, aMessage: string);
 begin
   TTest4DCore.IncValidation;
   if aValue = aTobe then
-    ThrowAssertExceptionAreNotEqual(aValue, aTobe, aMessage);
+  begin
+    FailedTestAreNotEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
-class procedure Assert.AreNotEqual(const aValue, aTobe: integer;
-  const aMessage: string);
+class procedure Assert.AreNotEqual(const aValue, aTobe: integer; const aMessage: string);
 begin
   TTest4DCore.IncValidation;
   if aValue = aTobe then
-    ThrowAssertExceptionAreNotEqual(aValue, aTobe, aMessage);
+  begin
+    FailedTestAreNotEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
-class procedure Assert.AreNotEqual(const aValue, aTobe: TStream;
-  const aMessage: string);
+class procedure Assert.AreNotEqual(const aValue, aTobe: TStream; const aMessage: string);
 begin
   var Language := TTest4DCore.Configurations.Language;
   TTest4DCore.IncValidation;
   if not StreamsAreEqual(aValue, aTobe) then
+  begin
+    TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
     Exit;
+  end;
 
   var lTypeValue := TRttiContext.Create.GetType(aValue);
   var lTypeTobe := TRttiContext.Create.GetType(aTobe);
   try
     if aMessage.IsEmpty then
-      raise Test4DExceptionAssert.Create(lTypeValue.Name + Language.AssertExceptionAreNotEqualStream + lTypeTobe.Name + ' ' + aMessage)
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, lTypeValue.Name + Language.AssertExceptionAreNotEqualStream + lTypeTobe.Name + ' ' + aMessage)
     else
-      raise Test4DExceptionAssert.Create(lTypeValue.Name + Language.AssertExceptionAreNotEqualStream + lTypeTobe.Name + ' [' + aMessage + ']')
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, lTypeValue.Name + Language.AssertExceptionAreNotEqualStream + lTypeTobe.Name + ' [' + aMessage + ']')
   finally
     lTypeValue.DisposeOf;
     lTypeTobe.DisposeOf;
@@ -272,10 +330,13 @@ begin
   if CompareMem(aValue, aTobe, size) then
   begin
     if amessage.IsEmpty then
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionAreNotEqualMemory)
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionAreNotEqualMemory)
     else
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionAreNotEqualMemory + '[' + aMessage + ']');
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionAreNotEqualMemory + '[' + aMessage + ']');
+
+    Exit;
   end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class function Assert.Implements<T>(aValue: IInterface;
@@ -286,10 +347,13 @@ begin
   if not Supports(aValue, GetTypeData(TypeInfo(T)).Guid,result) then
   begin
     if aMessage.IsEmpty then
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionImplements + GetTypeName(TypeInfo(T)) + aMessage)
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionImplements + GetTypeName(TypeInfo(T)))
     else
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionImplements + GetTypeName(TypeInfo(T)) + aMessage);
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionImplements + GetTypeName(TypeInfo(T)) + '[' + aMessage + ']');
+
+    Exit;
   end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.IsFalse(const aCondition: boolean;
@@ -300,10 +364,13 @@ begin
   if aCondition then
   begin
     if aMessage.IsEmpty then
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsFalse)
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsFalse)
     else
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsFalse + aMessage);
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsFalse + '[' + aMessage + ']');
+
+    Exit;
   end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.IsNotNull(const aCondition: IInterface;
@@ -316,8 +383,11 @@ begin
     if aMessage.IsEmpty then
       raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNotNullInterface)
     else
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNotNullInterface + aMessage);
+      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNotNullInterface + '[' + aMessage + ']');
+
+    Exit;
   end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.IsNotNull(const aCondition: Pointer;
@@ -328,10 +398,13 @@ begin
   if aCondition = nil then
   begin
     if aMessage.IsEmpty then
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNotNullPointer)
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNotNullPointer)
     else
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNotNullPointer + aMessage);
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNotNullPointer + '[' + aMessage + ']');
+
+    Exit;
   end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.IsNotNull(const aCondition: TObject;
@@ -342,10 +415,13 @@ begin
   if aCondition = nil then
   begin
     if aMessage.IsEmpty then
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNotNullObject)
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNotNullObject)
     else
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNotNullObject + aMessage);
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNotNullObject + '[' + aMessage + ']');
+
+    Exit;
   end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.IsNotNull(const aCondition: Variant;
@@ -356,10 +432,13 @@ begin
   if VarIsNull(aCondition) then
   begin
     if aMessage.IsEmpty then
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNotNullVariant)
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNotNullVariant)
     else
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNotNullVariant + aMessage);
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNotNullVariant + '[' + aMessage + ']');
+
+    Exit;
   end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.IsNull(const aCondition: Variant; const aMessage: string);
@@ -369,10 +448,13 @@ begin
   if not VarIsNull(aCondition) then
   begin
     if aMessage.IsEmpty then
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNullVariant)
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNullVariant)
     else
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNullVariant + aMessage);
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNullVariant + '[' + aMessage + ']');
+
+    Exit;
   end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.IsNull(const aCondition: IInterface; const aMessage: string);
@@ -382,10 +464,13 @@ begin
   if aCondition <> nil then
   begin
     if aMessage.IsEmpty then
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNullInterface)
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNullInterface)
     else
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNullInterface + aMessage);
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNullInterface + '[' + aMessage + ']');
+
+    Exit;
   end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.IsNull(const aCondition: TObject; const aMessage: string);
@@ -395,10 +480,13 @@ begin
   if aCondition <> nil then
   begin
     if aMessage.IsEmpty then
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNullObject)
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNullObject)
     else
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNullObject + aMessage);
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNullObject + '[' + aMessage + ']');
+
+    Exit;
   end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.IsNull(const aCondition: Pointer; const aMessage: string);
@@ -408,10 +496,13 @@ begin
   if aCondition <> nil then
   begin
     if aMessage.IsEmpty then
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNullPointer)
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNullPointer)
     else
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsNullPointer + aMessage);
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsNullPointer + '[' + aMessage + ']');
+
+    Exit;
   end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class procedure Assert.IsTrue(const aCondition: boolean; const aMessage: string);
@@ -421,32 +512,44 @@ begin
   if not aCondition then
   begin
     if aMessage.IsEmpty then
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsTrue)
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsTrue)
     else
-      raise Test4DExceptionAssert.Create(Language.AssertExceptionIsTrue + aMessage);
+      TTest4DCore.SetFailedTest(TTest4DCore.TestIndex, Language.AssertExceptionIsTrue + '[' + aMessage + ']');
+
+    Exit;
   end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
-class procedure Assert.AreNotEqual(const aValue, aTobe: TClass;
-  const aMessage: string);
+class procedure Assert.AreNotEqual(const aValue, aTobe: TClass; const aMessage: string);
 begin
   TTest4DCore.IncValidation;
   if aValue = aTobe then
-    ThrowAssertExceptionAreNotEqual(aValue.ClassName, aTobe.ClassName, aMessage);
+  begin
+    FailedTestAreNotEqual(aValue.ClassName, aTobe.ClassName, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
-class procedure Assert.AreNotEqual(const aValue, aTobe: Double;
-  const aMessage: string);
+class procedure Assert.AreNotEqual(const aValue, aTobe: Double; const aMessage: string);
 begin
   if SameValue(aValue, aTobe, 0) then
-    ThrowAssertExceptionAreNotEqual(aValue, aTobe, aMessage);
+  begin
+    FailedTestAreNotEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
-class procedure Assert.AreNotEqual(const aValue, aTobe: Extended;
-  const aMessage: string);
+class procedure Assert.AreNotEqual(const aValue, aTobe: Extended; const aMessage: string);
 begin
   if SameValue(aValue, aTobe, 0) then
-    ThrowAssertExceptionAreNotEqual(aValue, aTobe, aMessage);
+  begin
+    FailedTestAreNotEqual(aValue, aTobe, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 class function Assert.StreamsAreEqual(aValue, aTobe: TStream): boolean;
@@ -480,7 +583,11 @@ class procedure Assert.AreEqual(const aValue, aTobe: TClass;
   const aMessage: string);
 begin
   if aValue <> aTobe then
-    ThrowAssertException(aValue.ClassName, aTobe.ClassName, aMessage);
+  begin
+    FailedTestAreEqual(aValue.ClassName, aTobe.ClassName, aMessage);
+    Exit;
+  end;
+  TTest4DCore.SetPassedTest(TTest4DCore.TestIndex);
 end;
 
 end.
