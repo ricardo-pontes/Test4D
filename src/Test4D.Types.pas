@@ -21,6 +21,7 @@ type
     function AssertExceptionAreNotEqual : string;
     function AssertExceptionWillNotRaise : string;
     function AssertExceptionWillRaise : string;
+    function AssertExceptionWillRaiseWithDifExceptionType(aExpect, aActual : string) : string;
     function AssertExceptionAreEqualStream : string;
     function AssertExceptionAreNotEqualStream : string;
     function AssertExceptionAreNotEqualMemory : string;
@@ -46,6 +47,10 @@ type
   end;
 
   Test4DExceptionThrowedWillRaise = class(Test4DException)
+
+  end;
+
+  Test4DExceptionThrowedWillRaiseWithDifExceptionType = class(Test4DException)
 
   end;
 

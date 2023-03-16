@@ -178,6 +178,7 @@
         <DCCReference Include="Test4D.Configurations.pas"/>
         <DCCReference Include="Test4D.Languages.EN.pas"/>
         <DCCReference Include="Test4D.Languages.PTBR.pas"/>
+        <DCCReference Include="Test4D.Totals.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

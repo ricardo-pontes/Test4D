@@ -25,6 +25,7 @@ type
     function AssertExceptionAreNotEqual : string;
     function AssertExceptionWillNotRaise : string;
     function AssertExceptionWillRaise : string;
+    function AssertExceptionWillRaiseWithDifExceptionType(aExpect, aActual : string) : string;
     function AssertExceptionAreEqualStream : string;
     function AssertExceptionAreNotEqualStream : string;
     function AssertExceptionAreNotEqualMemory : string;
@@ -140,6 +141,11 @@ begin
   Result := 'Exception esperado, mas não aconteceu. '
 end;
 
+function TTest4DLanguagePTBR.AssertExceptionWillRaiseWithDifExceptionType(aExpect, aActual: string): string;
+begin
+  Result := 'Exceção lançada, mas não é igual. Esperado: ' + aExpect + ' Lançada: ' + aActual;
+end;
+
 class function TTest4DLanguagePTBR.New: iTest4DLanguage;
 begin
   Result := Self.Create;
@@ -162,7 +168,7 @@ end;
 
 function TTest4DLanguagePTBR.PrintConsoleTotalsTotalPassed: string;
 begin
-  Result := 'Total de Teste Passados: ';
+  Result := 'Total de Testes Passados: ';
 end;
 
 function TTest4DLanguagePTBR.PrintConsoleTotalsTotalSkipped: string;

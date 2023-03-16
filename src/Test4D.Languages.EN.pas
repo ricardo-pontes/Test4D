@@ -25,6 +25,7 @@ type
     function AssertExceptionAreNotEqual : string;
     function AssertExceptionWillNotRaise : string;
     function AssertExceptionWillRaise : string;
+    function AssertExceptionWillRaiseWithDifExceptionType(aExpect, aActual : string) : string;
     function AssertExceptionAreEqualStream : string;
     function AssertExceptionAreNotEqualStream : string;
     function AssertExceptionAreNotEqualMemory : string;
@@ -138,6 +139,11 @@ end;
 function TTest4DLanguageEN.AssertExceptionWillRaise: string;
 begin
   Result := 'Exception expected but not throwed.'
+end;
+
+function TTest4DLanguageEN.AssertExceptionWillRaiseWithDifExceptionType(aExpect, aActual : string) : string;
+begin
+  Result := 'Exception throwed but not equal. Expect: ' + aExpect + ' Throwed: ' + aActual;
 end;
 
 class function TTest4DLanguageEN.New: iTest4DLanguage;
